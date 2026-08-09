@@ -1,0 +1,21 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+/**
+ * Auth-only client using the anon key.
+ * Used only to verify email/password with Supabase Auth — not for DB writes.
+ */
+export function createAuthClient() {
+  const url = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+
+  if (!url || !anonKey) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_ANON_KEY");
+  }
+
+  return createClient(url, anonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
