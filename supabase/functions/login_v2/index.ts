@@ -22,6 +22,20 @@ type LoginBody = {
   branch?: string;
 };
 
+async function fetchSalesCount(supabase: any, storeId: number): Promise<number> {
+  const { count, error } = await supabase
+    .from("SALES")
+    .select("id", { count: "exact", head: true })
+    .eq("stores_id", storeId);
+
+  if (error) {
+    console.error("SALES count error:", error);
+    return 0;
+  }
+
+  return Number(count ?? 0);
+}
+
 export default {
   fetch: withSupabase({ auth: ["publishable", "secret"] }, async (req, ctx) => {
     const corsHeaders = getCorsHeaders(req);
@@ -117,7 +131,7 @@ export default {
     if ("error" in storeSession) {
       return jsonResponse({ message: storeSession.error }, 500, corsHeaders);
     }
-
+    
     (async () => {
       try {
         await recordEarliestAttainment(supabase, username, account);
@@ -127,9 +141,10 @@ export default {
     })();
 
     const tBeforeFetch = performance.now();
-    const [Stores_default, Price] = await Promise.all([
+    const [Stores_default, Price, SalesCount] = await Promise.all([
       storesdefault(supabase, branch),
       price(supabase, branch),
+      fetchSalesCount(supabase, storeSession.store.id),
     ]);
     const tAfterFetch = performance.now();
 
@@ -159,6 +174,7 @@ export default {
           role: loginData.user.app_metadata.role,
           stores_default: Stores_default,
           price: Price,
+          sales_count: storeSession.isReturning ? SalesCount : undefined,
           debug: timings,
         },
         200,
@@ -168,7 +184,7 @@ export default {
     }
 
     console.debug("login timings:", timings);
-
+    
     return jsonResponse(
       {
         message: "Login successful",
@@ -177,6 +193,7 @@ export default {
         role: loginData.user.app_metadata.role,
         stores_default: Stores_default,
         price: Price,
+        sales_count: storeSession.isReturning ? SalesCount : undefined,
       },
       200,
       corsHeaders,

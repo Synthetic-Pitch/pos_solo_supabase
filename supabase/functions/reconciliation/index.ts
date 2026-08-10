@@ -35,11 +35,11 @@ export default {
         { status: 400, headers: corsHeaders }
       );
     }
-
+    
     const body: ReconciliationBody = await req.json();
     
     const supabase = ctx.supabaseAdmin as any;
-    
+
     // Validate session
     const { data: store, error: storeError } = await supabase
       .from("STORES")

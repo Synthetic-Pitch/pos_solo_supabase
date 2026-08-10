@@ -83,12 +83,12 @@ export async function resolveStoreSession(
     } as never)
     .select(STORE_COLUMNS)
     .single();
-
+  
   if (error || !data) {
     console.error("STORES insert error:", error);
     return { error: "Unable to create store session." };
   }
-
+  
   return {
     sessionId,
     isReturning: false,
