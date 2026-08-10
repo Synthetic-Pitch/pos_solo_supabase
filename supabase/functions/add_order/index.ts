@@ -66,11 +66,12 @@ export default {
     }
 
     const allowedPaymentMethods = ["cash", "gcash", "paypal"] as const;
+    const allowedSizes = ["small", "medium", "large"] as const;
     const orders = [] as Array<{ flavor: string; size: string; payment_method: string }>;
 
     for (const [index, item] of body.orders.entries()) {
       const flavor = validateString(item.flavor) ? item.flavor!.trim() : null;
-      const size = validateString(item.size) ? item.size!.trim() : null;
+      const size = validateString(item.size) ? item.size!.trim().toLowerCase() : null;
       const method = validateString(item.payment_method)
         ? item.payment_method!.trim().toLowerCase()
         : "cash";
@@ -91,8 +92,21 @@ export default {
         );
       }
 
+      if (!allowedSizes.includes(size as typeof allowedSizes[number])) {
+        continue; // skip unsupported size values
+      }
+
       orders.push({ flavor, size, payment_method: method });
     }
+
+    if (orders.length === 0) {
+      return jsonResponse({ message: "No valid orders to insert" }, 400, corsHeaders);
+    }
+
+    orders.sort((a, b) => {
+      const orderMap = { small: 0, medium: 1, large: 2 } as const;
+      return orderMap[a.size as keyof typeof orderMap] - orderMap[b.size as keyof typeof orderMap];
+    });
 
     const supabase = ctx.supabaseAdmin;
     // verify session and csrf token belong together and are not expired
@@ -163,23 +177,36 @@ export default {
       return jsonResponse({ message: "Failed to create sale" }, 500, corsHeaders);
     }
     
-    // fetch total sales count for this store (includes the just-inserted row)
-    let salesCount = 0;
+    // fetch sales count breakdown by size for this store
+    const sizeBreakdown = { small: 0, medium: 0, large: 0 };
     try {
-      const { count, error: countErr } = await supabase
+      const { data: salesSizes, error: sizeErr } = await supabase
         .from("SALES")
-        .select("id", { count: "exact", head: true })
+        .select("size")
         .eq("stores_id", storeRow.id);
-    
-      if (countErr) {
-        console.error("SALES count error:", countErr);
-      } else {
-        salesCount = Number(count ?? 0);
+
+      if (sizeErr) {
+        console.error("SALES size breakdown error:", sizeErr);
+      } else if (salesSizes) {
+        for (const sale of salesSizes as Array<{ size: string }>) {
+          const sizeKey = sale.size?.trim().toLowerCase();
+          if (sizeKey === "small") sizeBreakdown.small += 1;
+          else if (sizeKey === "medium") sizeBreakdown.medium += 1;
+          else if (sizeKey === "large") sizeBreakdown.large += 1;
+        }
       }
     } catch (e) {
-      console.error("SALES count unexpected error:", e);
+      console.error("SALES size breakdown unexpected error:", e);
     }
 
-    return jsonResponse({ message: "Sales recorded", inserted: insertedRows.map((row) => row.id), sales_count: salesCount }, 201, corsHeaders);
+    return jsonResponse(
+      {
+        message: "Sales recorded",
+        inserted: insertedRows.map((row) => row.id),
+        sales_count: sizeBreakdown,
+      },
+      201,
+      corsHeaders,
+    );
   }),
 };
