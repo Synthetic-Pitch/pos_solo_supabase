@@ -139,7 +139,7 @@ export default {
         console.error("earliest-attainment background error:", e);
       }
     })();
-
+    
     const tBeforeFetch = performance.now();
     const [Stores_default, Price, SalesCount] = await Promise.all([
       storesdefault(supabase, branch),
@@ -184,7 +184,7 @@ export default {
     }
 
     console.debug("login timings:", timings);
-    
+
     return jsonResponse(
       {
         message: "Login successful",

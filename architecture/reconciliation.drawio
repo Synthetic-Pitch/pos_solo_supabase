@@ -1,0 +1,82 @@
+<mxfile host="65bd71144e">
+    <diagram name="Page-1" id="Qlyk1L2ZxemSQC4vRrcx">
+        <mxGraphModel dx="679" dy="819" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="DTeTCwPRJIzCC4yHFh-u-3" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="430" y="321.69" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-3" value="RECONCILIATION" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=23;fontColor=#009900;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="92" width="60" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-6" value="validate&amp;nbsp;&lt;div&gt;session/csrf token&lt;/div&gt;&lt;div&gt;cookie&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="368" y="170" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-8" value="STORES" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" parent="1" vertex="1">
+                    <mxGeometry x="398" y="323" width="60" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-10" value="" style="endArrow=classic;html=1;rounded=0;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="429.6" y="271.05" as="sourcePoint"/>
+                        <mxPoint x="364.23" y="272.86" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="DTeTCwPRJIzCC4yHFh-u-11" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="259.263905843099" y="276.5" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-11" value="fail" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="313" y="264" width="46" height="25" as="geometry"/>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-13" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;status 400&lt;/h1&gt;&lt;p&gt;No session_id/CSRF token found&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="73" y="216.5" width="180" height="77.5" as="geometry"/>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="DTeTCwPRJIzCC4yHFh-u-20" target="DTeTCwPRJIzCC4yHFh-u-24" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="313.6204107375372" y="526.9623572939918" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="DTeTCwPRJIzCC4yHFh-u-20" target="DTeTCwPRJIzCC4yHFh-u-23" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-20" value="verification&lt;div&gt;of cookie and data in database&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="363" y="438" width="128" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-23" value="match" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="498" y="537" width="88" height="46" as="geometry"/>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="DTeTCwPRJIzCC4yHFh-u-24" target="DTeTCwPRJIzCC4yHFh-u-30" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-24" value="unmatch" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="274" y="537" width="74" height="46" as="geometry"/>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.506;entryY=0.004;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="DTeTCwPRJIzCC4yHFh-u-8" target="DTeTCwPRJIzCC4yHFh-u-20" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-30" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;status 403&lt;/h1&gt;&lt;p&gt;CSRF token/ Session ID mismatch&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="120" y="652" width="180" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="DTeTCwPRJIzCC4yHFh-u-32" target="3">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-32" value="INVENTORY&lt;div&gt;RECONCILIATION&lt;/div&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" parent="1" vertex="1">
+                    <mxGeometry x="478" y="639" width="128" height="86" as="geometry"/>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="DTeTCwPRJIzCC4yHFh-u-23" target="DTeTCwPRJIzCC4yHFh-u-32" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="DTeTCwPRJIzCC4yHFh-u-34" value="UPDATE" style="text;html=1;whiteSpace=wrap;align=center;verticalAlign=middle;rounded=0;fontColor=#FF8000;" parent="1" vertex="1">
+                    <mxGeometry x="512" y="639" width="60" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="SIUCCESS" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+                    <mxGeometry x="514" y="785" width="60" height="30" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

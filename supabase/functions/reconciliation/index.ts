@@ -81,7 +81,7 @@ export default {
         { status: 500, headers: corsHeaders }
       );
     }
-
+    
     if (existing) {
       // UPDATE path: append to added_cups/added_potatoes arrays, merge appeal
       const updatedAddedCups = body.added_cups
