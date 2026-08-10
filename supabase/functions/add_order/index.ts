@@ -1,20 +1,25 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
 import { getCorsHeaders } from "./cors.ts";
-import { getCookie } from "../login_v2/get_cookie.ts";
-import { jsonResponse, isValidUuid } from "../login_v2/utils.ts";
+import { getCookie, isValidUuid, jsonResponse } from "./utils.ts";
 
-type AddOrderBody = {
+type AddOrderItem = {
   flavor?: string;
   size?: string;
   payment_method?: string;
 };
+
+type AddOrderBody = {
+  orders?: AddOrderItem[];
+};
+
 type StoreColumns = {
     id: number;
     session_id: string;
     csrf_token: string;
     session_expiration: string | null;
 }
+
 type SaleColumns = {
   id: number;
   flavor: string;
@@ -56,9 +61,37 @@ export default {
       return jsonResponse({ message: "Invalid JSON body" }, 400, corsHeaders);
     }
 
-    // basic validation (stores_id is derived from authenticated STORE)
-    if (!validateString(body.flavor) || !validateString(body.size)) {
-      return jsonResponse({ message: "flavor and size are required" }, 400, corsHeaders);
+    if (!Array.isArray(body.orders) || body.orders.length === 0) {
+      return jsonResponse({ message: "orders array is required" }, 400, corsHeaders);
+    }
+
+    const allowedPaymentMethods = ["cash", "gcash", "paypal"] as const;
+    const orders = [] as Array<{ flavor: string; size: string; payment_method: string }>;
+
+    for (const [index, item] of body.orders.entries()) {
+      const flavor = validateString(item.flavor) ? item.flavor!.trim() : null;
+      const size = validateString(item.size) ? item.size!.trim() : null;
+      const method = validateString(item.payment_method)
+        ? item.payment_method!.trim().toLowerCase()
+        : "cash";
+
+      if (!flavor || !size) {
+        return jsonResponse(
+          { message: `Order ${index + 1} missing flavor or size` },
+          400,
+          corsHeaders,
+        );
+      }
+
+      if (!allowedPaymentMethods.includes(method as typeof allowedPaymentMethods[number])) {
+        return jsonResponse(
+          { message: `Order ${index + 1} has invalid payment_method` },
+          400,
+          corsHeaders,
+        );
+      }
+
+      orders.push({ flavor, size, payment_method: method });
     }
 
     const supabase = ctx.supabaseAdmin;
@@ -89,7 +122,6 @@ export default {
       return jsonResponse({ message: "Session expired" }, 401, corsHeaders);
     }
     
-
     // Insert into SALES — re-check session_expiration immediately before inserting
     const { data: freshStore, error: freshErr } = await supabase
       .from("STORES")
@@ -111,26 +143,26 @@ export default {
       return jsonResponse({ message: "Session expired" }, 401, corsHeaders);
     }
 
-    const paymentMethod = validateString(body.payment_method) ? body.payment_method!.trim() : "cash";
-
-    const payload = {
-      flavor: body.flavor!.trim(),
-      size: body.size!.trim(),
-      payment_method: paymentMethod,
+    const payload = orders.map((order) => ({
+      flavor: order.flavor,
+      size: order.size,
+      payment_method: order.payment_method,
       stores_id: storeRow.id,
-    } as const;
+    }));
 
-    const { data: inserted, error: insertErr } = await supabase
+    const insertResult = await supabase
       .from("SALES")
       .insert(payload as any)
-      .select("id")
-      .single<SaleColumns>();
+      .select("id");
 
-    if (insertErr) {
+    const insertedRows = insertResult.data as SaleColumns[] | null;
+    const insertErr = insertResult.error;
+
+    if (insertErr || !insertedRows) {
       console.error("SALES insert error:", insertErr);
       return jsonResponse({ message: "Failed to create sale" }, 500, corsHeaders);
     }
-
+    
     // fetch total sales count for this store (includes the just-inserted row)
     let salesCount = 0;
     try {
@@ -148,6 +180,6 @@ export default {
       console.error("SALES count unexpected error:", e);
     }
 
-    return jsonResponse({ message: "Sale recorded", id: inserted.id, sales_count: salesCount }, 201, corsHeaders);
+    return jsonResponse({ message: "Sales recorded", inserted: insertedRows.map((row) => row.id), sales_count: salesCount }, 201, corsHeaders);
   }),
 };
