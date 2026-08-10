@@ -22,6 +22,7 @@ type SaleColumns = {
   payment_method?: string;
   stores_id: number;
 }
+
 function validateString(v: unknown): v is string {
   return typeof v === "string" && v.trim().length > 0;
 }
@@ -42,12 +43,12 @@ export default {
     if (!csrfHeader) {
       return jsonResponse({ message: "Missing CSRF token" }, 401, corsHeaders);
     }
- 
+    
     const cookieSessionId = getCookie(req);
     if (!cookieSessionId || !isValidUuid(cookieSessionId)) {
       return jsonResponse({ message: "Invalid or missing session cookie" }, 401, corsHeaders);
     }
-
+    
     let body: AddOrderBody;
     try {
       body = await req.json();
@@ -68,7 +69,7 @@ export default {
       .select("id, session_id, csrf_token, session_expiration")
       .eq("session_id", cookieSessionId)
       .maybeSingle<StoreColumns>();
-    
+
     if (storeErr) {
       console.error("STORES lookup error:", storeErr);
       return jsonResponse({ message: "Unable to verify session" }, 500, corsHeaders);
@@ -130,6 +131,23 @@ export default {
       return jsonResponse({ message: "Failed to create sale" }, 500, corsHeaders);
     }
 
-    return jsonResponse({ message: "Sale recorded", id: inserted.id }, 201, corsHeaders);
+    // fetch total sales count for this store (includes the just-inserted row)
+    let salesCount = 0;
+    try {
+      const { count, error: countErr } = await supabase
+        .from("SALES")
+        .select("id", { count: "exact", head: true })
+        .eq("stores_id", storeRow.id);
+    
+      if (countErr) {
+        console.error("SALES count error:", countErr);
+      } else {
+        salesCount = Number(count ?? 0);
+      }
+    } catch (e) {
+      console.error("SALES count unexpected error:", e);
+    }
+
+    return jsonResponse({ message: "Sale recorded", id: inserted.id, sales_count: salesCount }, 201, corsHeaders);
   }),
 };
