@@ -35,7 +35,7 @@ function validateString(v: unknown): v is string {
 export default {
   fetch: withSupabase({ auth: ["publishable", "secret"] }, async (req, ctx) => {
     const corsHeaders = getCorsHeaders(req);
-
+    
     if (req.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
     }
@@ -60,7 +60,7 @@ export default {
     } catch {
       return jsonResponse({ message: "Invalid JSON body" }, 400, corsHeaders);
     }
-
+    
     if (!Array.isArray(body.orders) || body.orders.length === 0) {
       return jsonResponse({ message: "orders array is required" }, 400, corsHeaders);
     }
@@ -68,14 +68,14 @@ export default {
     const allowedPaymentMethods = ["cash", "gcash", "paypal"] as const;
     const allowedSizes = ["small", "medium", "large"] as const;
     const orders = [] as Array<{ flavor: string; size: string; payment_method: string }>;
-
+    
     for (const [index, item] of body.orders.entries()) {
       const flavor = validateString(item.flavor) ? item.flavor!.trim() : null;
       const size = validateString(item.size) ? item.size!.trim().toLowerCase() : null;
       const method = validateString(item.payment_method)
         ? item.payment_method!.trim().toLowerCase()
         : "cash";
-
+        
       if (!flavor || !size) {
         return jsonResponse(
           { message: `Order ${index + 1} missing flavor or size` },
