@@ -88,7 +88,7 @@ export default {
       large: closingInput.large as number,
       potatoes: closingInput.potatoes as number,
     };
-
+    
     const [reconciliationResult, salesResult, priceResult] = await Promise.all([
       ctx.supabaseAdmin.from("INVENTORY_RECONCILIATION")
         .select("id, small_cups, medium_cups, large_cups, opening_potatoes, added_cups, added_potatoes")
