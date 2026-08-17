@@ -83,7 +83,7 @@ export default {
       .select("id, session_id, csrf_token, session_expiration")
       .eq("session_id", cookieSessionId)
       .maybeSingle<StoreColumns>();
-    
+
     if (storeErr) {
       console.error("STORES lookup error:", storeErr);
       return jsonResponse(
@@ -125,7 +125,7 @@ export default {
         corsHeaders,
       );
     }
-
+    
     if (!reconciliation) {
       return jsonResponse(
         { message: "No reconciliation record found for this store" },
@@ -133,7 +133,7 @@ export default {
         corsHeaders,
       );
     }
-
+    
     const updatedAddedPotatoes = [
       ...(reconciliation.added_potatoes ?? []),
       { date, kilo },

@@ -22,18 +22,19 @@ type LoginBody = {
   branch?: string;
 };
 
-async function fetchSalesCount(supabase: any, storeId: number): Promise<number> {
-  const { count, error } = await supabase
+async function fetchSales(supabase: any, storeId: number): Promise<unknown[]> {
+  const { data, error } = await supabase
     .from("SALES")
-    .select("id", { count: "exact", head: true })
-    .eq("stores_id", storeId);
+    .select("*")
+    .eq("stores_id", storeId)
+    .order("created_at", { ascending: true });
 
   if (error) {
-    console.error("SALES count error:", error);
-    return 0;
+    console.error("SALES lookup error:", error);
+    return [];
   }
 
-  return Number(count ?? 0);
+  return data ?? [];
 }
 
 export default {
@@ -141,10 +142,10 @@ export default {
     })();
     
     const tBeforeFetch = performance.now();
-    const [Stores_default, Price, SalesCount] = await Promise.all([
+    const [Stores_default, Price, Sales] = await Promise.all([
       storesdefault(supabase, branch),
       price(supabase, branch),
-      fetchSalesCount(supabase, storeSession.store.id),
+      fetchSales(supabase, storeSession.store.id),
     ]);
     const tAfterFetch = performance.now();
 
@@ -174,7 +175,7 @@ export default {
           role: loginData.user.app_metadata.role,
           stores_default: Stores_default,
           price: Price,
-          sales_count: storeSession.isReturning ? SalesCount : undefined,
+          sales: storeSession.isReturning ? Sales : undefined,
           debug: timings,
         },
         200,
@@ -193,7 +194,7 @@ export default {
         role: loginData.user.app_metadata.role,
         stores_default: Stores_default,
         price: Price,
-        sales_count: storeSession.isReturning ? SalesCount : undefined,
+        sales: storeSession.isReturning ? Sales : undefined,
       },
       200,
       corsHeaders,
