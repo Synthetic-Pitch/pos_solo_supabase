@@ -28,7 +28,7 @@ export default {
       ?.split(";")
       .find((cookie) => cookie.trim().startsWith("session_id="))
       ?.split("=")[1];
-
+    
     if (!session_id || !csrfToken) {
       return Response.json(
         { message: "No session_id/CSRF token found" },
