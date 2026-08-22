@@ -6,10 +6,10 @@ import {
   getSessionId,
   isJsonRecord,
   isNonNegativeSmallInt,
+  isPriceRow,
   isValidUuid,
   jsonResponse,
   PAYMENT_METHODS,
-  type PriceRow,
   type ReconciliationRow,
   type SaleRow,
   type StoreSession,
@@ -22,19 +22,33 @@ type SummarizeBody = {
   closing_potatoes?: unknown;
 };
 
+type StoreDefaultPriceRow = {
+  small_cups: number;
+  medium_cups: number;
+  large_cups: number;
+};
+
 export default {
   fetch: withSupabase({ auth: ["publishable", "secret"] }, async (req, ctx) => {
     const corsHeaders = getCorsHeaders(req);
-    if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+    if (req.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
+    }
     if (req.method !== "POST") {
       return jsonResponse({ message: "Method not allowed" }, 405, corsHeaders);
     }
 
     const csrfToken = req.headers.get("x-csrf-token");
     const sessionId = getSessionId(req);
-    if (!csrfToken) return jsonResponse({ message: "Missing CSRF token" }, 401, corsHeaders);
+    if (!csrfToken) {
+      return jsonResponse({ message: "Missing CSRF token" }, 401, corsHeaders);
+    }
     if (!sessionId || !isValidUuid(sessionId)) {
-      return jsonResponse({ message: "Invalid or missing session cookie" }, 401, corsHeaders);
+      return jsonResponse(
+        { message: "Invalid or missing session cookie" },
+        401,
+        corsHeaders,
+      );
     }
 
     const { data: store, error: storeError } = await ctx.supabaseAdmin
@@ -44,13 +58,21 @@ export default {
       .maybeSingle<StoreSession>();
     if (storeError) {
       console.error("STORES lookup error:", storeError);
-      return jsonResponse({ message: "Unable to verify session" }, 500, corsHeaders);
+      return jsonResponse(
+        { message: "Unable to verify session" },
+        500,
+        corsHeaders,
+      );
     }
-    if (!store) return jsonResponse({ message: "Session not found" }, 401, corsHeaders);
+    if (!store) {
+      return jsonResponse({ message: "Session not found" }, 401, corsHeaders);
+    }
     if (store.csrf_token !== csrfToken) {
       return jsonResponse({ message: "CSRF token mismatch" }, 403, corsHeaders);
     }
-    const expiration = store.session_expiration ? Date.parse(store.session_expiration) : Number.NaN;
+    const expiration = store.session_expiration
+      ? Date.parse(store.session_expiration)
+      : Number.NaN;
     if (!Number.isFinite(expiration) || Date.now() >= expiration) {
       return jsonResponse({ message: "Session expired" }, 401, corsHeaders);
     }
@@ -77,7 +99,9 @@ export default {
       !isNonNegativeSmallInt(closingInput.potatoes)
     ) {
       return jsonResponse(
-        { message: "All closing inventory values must be non-negative integers" },
+        {
+          message: "All closing inventory values must be non-negative integers",
+        },
         400,
         corsHeaders,
       );
@@ -88,28 +112,59 @@ export default {
       large: closingInput.large as number,
       potatoes: closingInput.potatoes as number,
     };
-    
-    const [reconciliationResult, salesResult, priceResult] = await Promise.all([
-      ctx.supabaseAdmin.from("INVENTORY_RECONCILIATION")
-        .select("id, small_cups, medium_cups, large_cups, opening_potatoes, added_cups, added_potatoes")
-        .eq("stores_id", store.id).maybeSingle<ReconciliationRow>(),
-      ctx.supabaseAdmin.from("SALES").select("flavor, size, payment_method")
-        .eq("stores_id", store.id).in("payment_method", PAYMENT_METHODS),
-      ctx.supabaseAdmin.from("PRICE").select("small, medium, large")
-        .eq("branch", store.branch).maybeSingle<PriceRow>(),
-    ]);
 
-    const { data: reconciliation, error: reconciliationError } = reconciliationResult;
+    const [reconciliationResult, salesResult, storeDefaultResult] =
+      await Promise.all([
+        ctx.supabaseAdmin.from("INVENTORY_RECONCILIATION")
+          .select(
+            "id, small_cups, medium_cups, large_cups, opening_potatoes, added_cups, added_potatoes",
+          )
+          .eq("stores_id", store.id).maybeSingle<ReconciliationRow>(),
+        ctx.supabaseAdmin.from("SALES").select("flavor, size, payment_method")
+          .eq("stores_id", store.id).in("payment_method", PAYMENT_METHODS),
+        ctx.supabaseAdmin.from("STORE_DEFAULT").select(
+          "small_cups, medium_cups, large_cups",
+        )
+          .eq("branch", store.branch).maybeSingle<StoreDefaultPriceRow>(),
+      ]);
+
+    const { data: reconciliation, error: reconciliationError } =
+      reconciliationResult;
     const { data: sales, error: salesError } = salesResult;
-    const { data: price, error: priceError } = priceResult;
-    if (reconciliationError || salesError || priceError) {
-      console.error("Summary lookup error:", reconciliationError ?? salesError ?? priceError);
-      return jsonResponse({ message: "Unable to calculate summary" }, 500, corsHeaders);
+    const { data: storeDefault, error: storeDefaultError } = storeDefaultResult;
+    if (reconciliationError || salesError || storeDefaultError) {
+      console.error(
+        "Summary lookup error:",
+        reconciliationError ?? salesError ?? storeDefaultError,
+      );
+      return jsonResponse(
+        { message: "Unable to calculate summary" },
+        500,
+        corsHeaders,
+      );
     }
     if (!reconciliation) {
-      return jsonResponse({ message: "No reconciliation record found for this store" }, 404, corsHeaders);
+      return jsonResponse(
+        { message: "No reconciliation record found for this store" },
+        404,
+        corsHeaders,
+      );
     }
-    if (!price) return jsonResponse({ message: "No price record found for this branch" }, 404, corsHeaders);
+    // In this database, STORE_DEFAULT holds the active prices using these names.
+    const price = storeDefault && {
+      small: storeDefault.small_cups,
+      medium: storeDefault.medium_cups,
+      large: storeDefault.large_cups,
+    };
+    if (!isPriceRow(price)) {
+      return jsonResponse(
+        {
+          message: "No valid STORE_DEFAULT price values found for this branch",
+        },
+        404,
+        corsHeaders,
+      );
+    }
 
     const { error: updateError } = await ctx.supabaseAdmin
       .from("INVENTORY_RECONCILIATION")
@@ -123,13 +178,22 @@ export default {
       .eq("stores_id", store.id);
     if (updateError) {
       console.error("INVENTORY_RECONCILIATION update error:", updateError);
-      return jsonResponse({ message: "Unable to save closing inventory" }, 500, corsHeaders);
+      return jsonResponse(
+        { message: "Unable to save closing inventory" },
+        500,
+        corsHeaders,
+      );
     }
 
     return jsonResponse(
       {
         message: "Inventory summary calculated",
-        receipt: buildReceipt(reconciliation, (sales ?? []) as SaleRow[], price, closing),
+        receipt: buildReceipt(
+          reconciliation,
+          (sales ?? []) as SaleRow[],
+          price,
+          closing,
+        ),
       },
       200,
       corsHeaders,

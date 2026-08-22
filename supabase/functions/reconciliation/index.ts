@@ -99,7 +99,7 @@ export default {
       const updatedAddedCups = body.added_cups
         ? [...(existing.added_cups ?? []), body.added_cups]
         : existing.added_cups;
-      
+
       const updatedAddedPotatoes = body.added_potatoes
         ? [...(existing.added_potatoes ?? []), body.added_potatoes]
         : existing.added_potatoes;
