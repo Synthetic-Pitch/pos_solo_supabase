@@ -12,7 +12,7 @@ import {
 import { recordEarliestAttainment } from "./earliest_attainment.ts";
 import { resolveStoreSession } from "./returning.ts";
 import { buildSessionCookie, jsonResponse, buildCsrfCookie } from "./utils.ts";
-import { storesdefault, price } from "./storesdefault_price.ts";
+import { storesdefault } from "./storesdefault_price.ts";
 
 const DEBUG = Deno.env.get("DEBUG_LOGIN") === "true";
 
@@ -142,9 +142,8 @@ export default {
     })();
     
     const tBeforeFetch = performance.now();
-    const [Stores_default, Price, Sales] = await Promise.all([
+    const [Stores_Default, Sales] = await Promise.all([
       storesdefault(supabase, branch),
-      price(supabase, branch),
       fetchSales(supabase, storeSession.store.id),
     ]);
     const tAfterFetch = performance.now();
@@ -173,8 +172,7 @@ export default {
           email: loginData.user.email,
           isReturning: storeSession.isReturning,
           role: loginData.user.app_metadata.role,
-          stores_default: Stores_default,
-          price: Price,
+          stores_default: Stores_Default,
           sales: storeSession.isReturning ? Sales : undefined,
           debug: timings,
         },
@@ -192,8 +190,7 @@ export default {
         email: loginData.user.email,
         isReturning: storeSession.isReturning,
         role: loginData.user.app_metadata.role,
-        stores_default: Stores_default,
-        price: Price,
+        stores_default: Stores_Default,
         sales: storeSession.isReturning ? Sales : undefined,
       },
       200,
