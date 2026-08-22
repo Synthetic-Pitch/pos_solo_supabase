@@ -164,7 +164,7 @@ export default {
       resolve_store_ms: Math.round((tAfterResolve ?? tEnd) - (tBeforeResolve ?? tStart)),
       fetch_defaults_ms: Math.round((tAfterFetch ?? tEnd) - (tBeforeFetch ?? tStart)),
     };
-
+    
     if (DEBUG) {
       return jsonResponse(
         {
