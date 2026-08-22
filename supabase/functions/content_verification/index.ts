@@ -50,7 +50,7 @@ function response(
 function getSessionId(request: Request): string | null {
   const cookieHeader = request.headers.get("cookie");
   if (!cookieHeader) return null;
-
+  
   let sessionId: string | null = null;
   for (const part of cookieHeader.split(";")) {
     const separator = part.indexOf("=");
@@ -66,7 +66,7 @@ function getSessionId(request: Request): string | null {
       return null;
     }
   }
-
+  
   return sessionId;
 }
 
