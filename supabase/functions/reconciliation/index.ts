@@ -61,7 +61,7 @@ export default {
       .select("csrf_token, session_id, session_expiration, id")
       .eq("session_id", session_id)
       .maybeSingle();
-
+    
     if (storeError || !store) {
       return Response.json(
         { message: "Invalid session_id/CSRF token" },

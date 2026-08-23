@@ -4,7 +4,7 @@ export async function storesdefault(supabase: any, branch: string) {
     .select("small_cups,medium_cups,large_cups,opening_cash,opening_potatoes,flavors,sizes_price")
     .eq("branch", branch)
     .maybeSingle();
-
+  
   if (error) throw error;
   return data;
 }

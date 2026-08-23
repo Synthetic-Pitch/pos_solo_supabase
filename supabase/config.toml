@@ -386,6 +386,10 @@ deno_version = 2
 # This endpoint authenticates with its HttpOnly session cookie and CSRF header.
 verify_jwt = false
 
+[functions.content_verification_order]
+# This endpoint authenticates with its HttpOnly session cookie and CSRF header.
+verify_jwt = false
+
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
