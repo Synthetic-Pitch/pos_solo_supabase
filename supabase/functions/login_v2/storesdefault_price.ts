@@ -1,7 +1,7 @@
 export async function storesdefault(supabase: any, branch: string) {
   const { data, error } = await supabase
     .from("STORE_DEFAULT")
-    .select("small_cups,medium_cups,large_cups,opening_cash,opening_potatoes,flavors")
+    .select("small_cups,medium_cups,large_cups,opening_cash,opening_potatoes,flavors,sizes_price")
     .eq("branch", branch)
     .maybeSingle();
 

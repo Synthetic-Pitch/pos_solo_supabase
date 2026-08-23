@@ -89,7 +89,7 @@ export default {
       const message = await handleFailedLogin(supabase, username, account);
       return jsonResponse({ message }, 401, corsHeaders);
     }
-
+    
     if (loginData.user.app_metadata.role === "admin") {
       (async () => {
         try {
