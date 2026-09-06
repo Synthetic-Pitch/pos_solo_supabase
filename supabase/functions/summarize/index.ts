@@ -23,10 +23,30 @@ type SummarizeBody = {
 };
 
 type StoreDefaultPriceRow = {
-  small_cups: number;
-  medium_cups: number;
-  large_cups: number;
+  sizes_price: unknown;
 };
+
+type CupSize = "small" | "medium" | "large";
+
+/**
+ * Converts the JSONB price list to the shape consumed by the receipt builder.
+ * All three expected sizes must occur exactly once so malformed configuration
+ * cannot silently produce a receipt with an unintended price.
+ */
+function pricesFromSizesPrice(value: unknown): unknown {
+  if (!Array.isArray(value)) return undefined;
+
+  const prices: Partial<Record<CupSize, unknown>> = {};
+  for (const entry of value) {
+    if (!isJsonRecord(entry)) return undefined;
+    const size = entry.size;
+    if (size !== "small" && size !== "medium" && size !== "large") continue;
+    if (Object.hasOwn(prices, size)) return undefined;
+    prices[size] = entry.price;
+  }
+
+  return prices;
+}
 
 export default {
   fetch: withSupabase({ auth: ["publishable", "secret"] }, async (req, ctx) => {
@@ -122,9 +142,7 @@ export default {
           .eq("stores_id", store.id).maybeSingle<ReconciliationRow>(),
         ctx.supabaseAdmin.from("SALES").select("flavor, size, payment_method")
           .eq("stores_id", store.id).in("payment_method", PAYMENT_METHODS),
-        ctx.supabaseAdmin.from("STORE_DEFAULT").select(
-          "small_cups, medium_cups, large_cups",
-        )
+        ctx.supabaseAdmin.from("STORE_DEFAULT").select("sizes_price")
           .eq("branch", store.branch).maybeSingle<StoreDefaultPriceRow>(),
       ]);
 
@@ -150,12 +168,7 @@ export default {
         corsHeaders,
       );
     }
-    // In this database, STORE_DEFAULT holds the active prices using these names.
-    const price = storeDefault && {
-      small: storeDefault.small_cups,
-      medium: storeDefault.medium_cups,
-      large: storeDefault.large_cups,
-    };
+    const price = storeDefault && pricesFromSizesPrice(storeDefault.sizes_price);
     if (!isPriceRow(price)) {
       return jsonResponse(
         {

@@ -156,7 +156,7 @@ export default {
     if (freshExpTs && Date.now() >= freshExpTs) {
       return jsonResponse({ message: "Session expired" }, 401, corsHeaders);
     }
-
+    
     const payload = orders.map((order) => ({
       flavor: order.flavor,
       size: order.size,
@@ -184,7 +184,7 @@ export default {
         .from("SALES")
         .select("size")
         .eq("stores_id", storeRow.id);
-
+      
       if (sizeErr) {
         console.error("SALES size breakdown error:", sizeErr);
       } else if (salesSizes) {
@@ -198,7 +198,7 @@ export default {
     } catch (e) {
       console.error("SALES size breakdown unexpected error:", e);
     }
-
+    
     return jsonResponse(
       {
         message: "Sales recorded",

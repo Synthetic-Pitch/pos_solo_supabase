@@ -1,6 +1,6 @@
 
 const ALLOWED_ORIGINS = [
-  "https://point-of-sale-account-management.vercel.app", // production
+  "https://pos-solo-frontend.vercel.app/", // production
   "http://localhost:5173","http://127.0.0.1:54321"       // local dev (Vite default port)
 ];
 
