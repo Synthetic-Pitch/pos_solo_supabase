@@ -1,5 +1,7 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
-import { withSupabase } from "@supabase/server";
+// Deploy bundles each function independently, so use the JSR specifier directly
+// instead of relying on the local deno.json import map.
+import { withSupabase } from "jsr:@supabase/server@^1";
 import { getCorsHeaders } from "./cors.ts";
 import {
   buildReceipt,
