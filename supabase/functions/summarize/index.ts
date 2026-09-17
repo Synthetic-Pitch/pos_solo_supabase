@@ -107,7 +107,7 @@ export default {
     } catch {
       return jsonResponse({ message: "Invalid JSON body" }, 400, corsHeaders);
     }
-
+    
     const closingInput = {
       small: body.closing_small_cups,
       medium: body.closing_medium_cups,
@@ -199,7 +199,7 @@ export default {
         corsHeaders,
       );
     }
-
+    
     return jsonResponse(
       {
         message: "Inventory summary calculated",

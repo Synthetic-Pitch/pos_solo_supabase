@@ -2,6 +2,7 @@ import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const ALLOWED_ORIGINS = new Set([
+  "https://www.reymarkdequito.live",
   "https://pos-solo-frontend.vercel.app",
   "http://localhost:5173",
   "http://127.0.0.1:54321",
@@ -34,7 +35,6 @@ function getCorsHeaders(request: Request): Headers {
   if (origin && ALLOWED_ORIGINS.has(origin)) {
     headers.set("Access-Control-Allow-Origin", origin);
   }
-
   return headers;
 }
 

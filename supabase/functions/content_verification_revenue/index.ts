@@ -16,6 +16,7 @@ const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 if (!supabaseUrl || !serviceRoleKey) {
   throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
 }
+
 const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
@@ -28,10 +29,12 @@ function getCorsHeaders(request: Request): Headers {
     "Cache-Control": "no-store",
     "Vary": "Origin",
   });
+
   const origin = request.headers.get("origin");
   if (origin && ALLOWED_ORIGINS.has(origin)) {
     headers.set("Access-Control-Allow-Origin", origin);
   }
+
   return headers;
 }
 
@@ -43,6 +46,7 @@ function response(
   return Response.json(body, { status, headers: getCorsHeaders(request) });
 }
 
+/** Returns the sole session_id cookie, rejecting ambiguous duplicate values. */
 function getSessionId(request: Request): string | null {
   const cookieHeader = request.headers.get("cookie");
   if (!cookieHeader) return null;
@@ -53,6 +57,7 @@ function getSessionId(request: Request): string | null {
     if (separator < 1 || part.slice(0, separator).trim() !== "session_id") {
       continue;
     }
+
     if (sessionId !== null) return null;
     try {
       sessionId = decodeURIComponent(part.slice(separator + 1).trim());
@@ -60,6 +65,7 @@ function getSessionId(request: Request): string | null {
       return null;
     }
   }
+
   return sessionId;
 }
 
@@ -68,6 +74,7 @@ Deno.serve(async (req) => {
   if (origin && !ALLOWED_ORIGINS.has(origin)) {
     return response(req, { message: "Origin not allowed" }, 403);
   }
+
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: getCorsHeaders(req) });
   }
@@ -82,51 +89,25 @@ Deno.serve(async (req) => {
 
   const sessionId = getSessionId(req);
   const csrfToken = req.headers.get("x-csrf-token");
-  if (
-    !sessionId ||
-    !SESSION_ID_PATTERN.test(sessionId) ||
-    !csrfToken ||
-    csrfToken.length > 256
-  ) {
+  if (!sessionId || !SESSION_ID_PATTERN.test(sessionId) || !csrfToken) {
     return response(req, { valid: false, message: "Invalid session" }, 401);
   }
-  
-  const { data: store, error: storeError } = await supabaseAdmin
+
+  const { data: store, error } = await supabaseAdmin
     .from("STORES")
     .select("id")
     .eq("session_id", sessionId)
     .eq("csrf_token", csrfToken)
     .gt("session_expiration", new Date().toISOString())
     .maybeSingle();
-  if (storeError) {
-    console.error("Order verification session lookup failed:", storeError);
+
+  if (error) {
+    console.error("Revenue verification lookup failed:", error);
     return response(req, { message: "Unable to verify session" }, 500);
   }
   if (!store) {
     return response(req, { valid: false, message: "Invalid session" }, 401);
   }
   
-  const { data: reconciliation, error: reconciliationError } =
-    await supabaseAdmin
-      .from("INVENTORY_RECONCILIATION")
-      .select("id")
-      .eq("stores_id", store.id)
-      .limit(1)
-      .maybeSingle();
-  if (reconciliationError) {
-    console.error(
-      "Order verification reconciliation lookup failed:",
-      reconciliationError,
-    );
-    return response(req, { message: "Unable to verify reconciliation" }, 500);
-  }
-  if (!reconciliation) {
-    return response(
-      req,
-      { valid: false, message: "Must set reconciliation first" },
-      401,
-    );
-  }
-
-  return response(req, { valid: true }, 200);
+  return response(req, { valid:true }, 200);
 });
