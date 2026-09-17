@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
     .eq("csrf_token", csrfToken)
     .gt("session_expiration", new Date().toISOString())
     .maybeSingle();
-
+  
   if (storeError) {
     console.error("Archive session lookup failed:", storeError);
     return response(req, { message: "Unable to verify session" }, 500);
@@ -122,12 +122,12 @@ Deno.serve(async (req) => {
     .from("SALES")
     .update({ archieve: true }, { count: "exact" })
     .eq("stores_id", store.id)
-    .eq("archive", false);
+    .eq("archieve", false);
 
   if (updateError) {
     console.error("Archive update failed:", updateError);
     return response(req, { message: "Unable to archive sales" }, 500);
   }
 
-  return response(req, { success: true, archived: count ?? 0 }, 200);
+  return response(req, { success: true, archieve: count ?? 0 }, 200);
 });
