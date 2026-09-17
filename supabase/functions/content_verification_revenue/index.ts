@@ -89,7 +89,12 @@ Deno.serve(async (req) => {
 
   const sessionId = getSessionId(req);
   const csrfToken = req.headers.get("x-csrf-token");
-  if (!sessionId || !SESSION_ID_PATTERN.test(sessionId) || !csrfToken) {
+  if (
+    !sessionId ||
+    !SESSION_ID_PATTERN.test(sessionId) ||
+    !csrfToken ||
+    csrfToken.length > 256
+  ) {
     return response(req, { valid: false, message: "Invalid session" }, 401);
   }
 
@@ -108,6 +113,27 @@ Deno.serve(async (req) => {
   if (!store) {
     return response(req, { valid: false, message: "Invalid session" }, 401);
   }
+
+  // Only the existence of one sale is needed to allow the revenue page.
+  const { data: sale, error: saleError } = await supabaseAdmin
+    .from("SALES")
+    .select("id")
+    .eq("stores_id", store.id)
+    .limit(1)
+    .maybeSingle();
+
+  if (saleError) {
+    console.error("Revenue verification sales lookup failed:", saleError);
+    return response(req, { message: "Unable to verify sales" }, 500);
+  }
   
+  if (!sale) {
+    return response(
+      req,
+      { valid: false, message: "Must add an order first" },
+      403,
+    );
+  }
+
   return response(req, { valid:true }, 200);
 });
